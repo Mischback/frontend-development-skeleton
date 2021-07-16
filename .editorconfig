@@ -14,3 +14,7 @@ end_of_line = lf                # use UNIX-style EOL
 insert_final_newline = true     # insert an empty line at the end of all files
 trim_trailing_whitespace = true # no trailing whitespaces
 
+# Makefiles always use tabs for indentation
+[Makefile]
+indent_style = tab
+

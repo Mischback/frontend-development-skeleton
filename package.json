@@ -1,0 +1,21 @@
+{
+  "devDependencies": {
+    "npm-watch": "^0.10.0",
+    "sass": "^1.35.2"
+  },
+  "watch": {
+    "build": {
+      "patterns": [
+        "_src",
+        "."
+      ],
+      "extensions": "html,js,scss",
+      "quiet": false,
+      "silent": true
+    }
+  },
+  "scripts": {
+    "build": "make dev",
+    "watch": "npm-watch"
+  }
+}
