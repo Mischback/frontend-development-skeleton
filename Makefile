@@ -65,13 +65,17 @@ $(INTERMEDIATE_BUILD_CSS_DIR)/%.css: %.scss $(SOURCE_SASS_DIR)/*.scss
 	$(create_dir)
 ifeq ($(BUILD_MODE),$(DEVELOPMENT_FLAG))
 	echo "[DEVELOPMENT] building stylesheet: $@ from $<"
-	# compile SCSS to CSS, creating a source map
+	# 1) compile SCSS to CSS, creating a source map
 	npx sass $<:$@ --style=expanded --source-map --stop-on-error
 else
 	echo "[PRODUCTION] building stylesheet: $@ from $<"
-	# compile SCSS to CSS, without creating a source map
-	# (the style is still "expanded" because optimization is performed by PostCSS
-	npx sass $<:$@ --style=expanded --no-source-map --stop-on-error
+	# 1) compile SCSS to CSS, without creating a source map
+	#    (the style is still "expanded" because optimization is performed by
+  #    PostCSS)
+	# 2) actually run PostCSS (see ./postcss.config.js for details on the actual
+  #    plugins in use)
+	npx sass $< --style=expanded --no-source-map --stop-on-error | \
+	npx postcss -o $@
 endif
 
 # Build the website in production mode.

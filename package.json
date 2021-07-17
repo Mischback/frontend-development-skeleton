@@ -1,6 +1,11 @@
 {
   "devDependencies": {
+    "@fullhuman/postcss-purgecss": "^4.0.3",
+    "autoprefixer": "^10.3.1",
+    "cssnano": "^5.0.6",
     "npm-watch": "^0.10.0",
+    "postcss": "^8.3.5",
+    "postcss-cli": "^8.3.1",
     "sass": "^1.35.2"
   },
   "watch": {
