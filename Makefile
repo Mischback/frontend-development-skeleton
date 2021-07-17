@@ -64,11 +64,15 @@ $(INTERMEDIATE_BUILD_CSS_DIR): $(INTERMEDIATE_BUILD_CSS_DIR)/style.css
 $(INTERMEDIATE_BUILD_CSS_DIR)/%.css: %.scss $(SOURCE_SASS_DIR)/*.scss
 	$(create_dir)
 ifeq ($(BUILD_MODE),$(DEVELOPMENT_FLAG))
-	echo "building css (dev): $@ from $<"
+	echo "[DEVELOPMENT] building stylesheet: $@ from $<"
+	# compile SCSS to CSS, creating a source map
+	npx sass $<:$@ --style=expanded --source-map --stop-on-error
 else
-	echo "building css (prod): $@ from $<"
+	echo "[PRODUCTION] building stylesheet: $@ from $<"
+	# compile SCSS to CSS, without creating a source map
+	# (the style is still "expanded" because optimization is performed by PostCSS
+	npx sass $<:$@ --style=expanded --no-source-map --stop-on-error
 endif
-	touch $@
 
 # Build the website in production mode.
 # "Production mode" means:
