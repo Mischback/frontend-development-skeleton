@@ -103,8 +103,12 @@ dev:
 dev/watch:
 	npm run watch build
 
+# Run "tree" with prepared options, matching this repositories structure.
+tree:
+	tree -a -I "node_modules|.git|.sass-cache" --dirsfirst -C
+
 # do not print commands to stdout
 .SILENT:
 
 # these targets don't produce actual output
-.PHONY: prod dev dev/watch
+.PHONY: dev dev/watch prod tree
