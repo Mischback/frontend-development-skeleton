@@ -35,11 +35,8 @@ function dirWalk(dir) {
             );
           } else {
             // handling of files! Here be magic!
-            fileFilter(file, "css")
-              .then(
-                fileHash,
-                err => reject(err)
-              )
+            filterFileExtension(file, "css")
+              .then(hashFile)
               .then(
                 hash => renameFile(file, hash),
                 err => reject(err)
@@ -80,7 +77,7 @@ function renameFile(file, hash) {
 }
 
 
-function fileHash(file) {
+function hashFile(file) {
   return new Promise((resolve, reject) => {
     // reject("foo");
     const hash = crypto.createHash("md5");
@@ -91,7 +88,7 @@ function fileHash(file) {
   });
 }
 
-function fileFilter(file, extensions) {
+function filterFileExtension(file, extensions) {
   return new Promise((resolve, reject) => {
     var fileExt = file.slice((file.lastIndexOf(".") - 1 >>> 0) + 2);
     // console.log("[fileFilter] found: " + fileExt);
@@ -99,7 +96,7 @@ function fileFilter(file, extensions) {
     // TODO: Here the file extension filter must be implemented!
     if (fileExt === extensions) resolve(file);
 
-    reject("Does not match extension!");
+    // reject("Does not match extension!");
   });
 }
 
