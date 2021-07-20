@@ -35,23 +35,23 @@ function dirWalk(dir) {
             );
           } else {
             // handling of files! Here be magic!
-            filterFileExtension(file, "css")
+            filterFileExtension(file, [".css", ".js"])
               .then(hashFile)
-              .then(
-                hash => renameFile(file, hash),
-                err => reject(err)
-              )
-              .then(
-                newFileName => {
-                  console.log(file + " -> " + newFileName);
-                  results.push({
-                    "file": file,
-                    "hashed": newFileName
-                  });
-                  if (!--pending) resolve(results);
-                },
-                err => reject(err)
-              )
+              .then(hash => {
+                // console.log("Successfully hashed " + file + ": " + hash);
+                return renameFile(file, hash);
+              })
+              .then(newFilename => {
+                // console.log("Successfully renamed " + file + " to " + newFilename);
+                results.push({
+                  "file": file,
+                  "hashed": newFilename
+                });
+              })
+              .catch(err => {
+                if (!err === "Does not match extension!") reject(err);
+              })
+              .finally(() => { if (!--pending) resolve(results); })
           }
         });
       });
@@ -67,12 +67,12 @@ function renameFile(file, hash) {
     var fileBaseName = path.basename(file, fileExt);
 
     // TODO: possible limit the length of the hash here!
-    var newFileName = path.join(filePath, fileBaseName + "." + hash + fileExt);
-    // console.log("[renameFile] new name: " + newFileName);
+    var newFilename = path.join(filePath, fileBaseName + "." + hash + fileExt);
+    // console.log("[renameFile] new name: " + newFilename);
 
     // actually rename the file on disk!
-    fs.rename(file, newFileName, err => reject("Could not rename file!"));
-    resolve(newFileName);
+    fs.rename(file, newFilename, err => reject("Could not rename file!"));
+    resolve(newFilename);
   });
 }
 
@@ -90,13 +90,14 @@ function hashFile(file) {
 
 function filterFileExtension(file, extensions) {
   return new Promise((resolve, reject) => {
-    var fileExt = file.slice((file.lastIndexOf(".") - 1 >>> 0) + 2);
-    // console.log("[fileFilter] found: " + fileExt);
+    // var fileExt = file.slice((file.lastIndexOf(".") - 1 >>> 0) + 2);
+    var fileExt = path.extname(file);
+    // console.log("[filterFileExtension] found: " + fileExt);
 
     // TODO: Here the file extension filter must be implemented!
-    if (fileExt === extensions) resolve(file);
+    if (extensions.includes(fileExt)) resolve(file);
 
-    // reject("Does not match extension!");
+    reject("Does not match extension!");
   });
 }
 
@@ -106,10 +107,13 @@ function main() {
     (result) => {
       console.log("dirWalk finished");
       console.log(result);
+
+      fs.writeFileSync(path.join("build", "asset-manifest.json"), JSON.stringify(result));
       return 0;
     },
     (err) => {
       console.error("something went wrong!");
+      console.error(err);
       return -1;
     })
 };
