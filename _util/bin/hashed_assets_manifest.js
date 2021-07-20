@@ -9,7 +9,7 @@ const crypto = require("crypto");
  *  - resolves to a list of files
  *  - rejects with an error message
  */
-function dirWalk(dir) {
+function dirWalk(dir, extensions) {
   var results = [];
 
   return new Promise((resolve, reject) => {
@@ -24,7 +24,7 @@ function dirWalk(dir) {
         fs.stat(file, (err, stat) => {
           // sub-directories are handled with a recursive call
           if (stat && stat.isDirectory()) {
-            dirWalk(file).then(
+            dirWalk(file, extensions).then(
               // resolve handling (fuse results)
               res => {
                 results = results.concat(res);
@@ -35,7 +35,7 @@ function dirWalk(dir) {
             );
           } else {
             // handling of files! Here be magic!
-            filterFileExtension(file, [".css", ".js"])
+            filterFileExtension(file, extensions)
               .then(hashFile)
               .then(hash => {
                 // console.log("Successfully hashed " + file + ": " + hash);
@@ -103,7 +103,10 @@ function filterFileExtension(file, extensions) {
 
 
 function main() {
-  dirWalk("build").then(
+  dirWalk(
+    "build",
+    [".css", ".js"]
+  ).then(
     (result) => {
       console.log("dirWalk finished");
       console.log(result);
