@@ -1,4 +1,17 @@
-
+/* Hash (static) assets and rename them for cache busting.
+ *
+ * This little dirty script will iterate a given folder recursively, match all
+ * files against a given file extension list and - in case of a positive match -
+ * will hash the file's content and then rename the file to include the hash
+ * in the file name.
+ * This allows for easy cache busting, where the (long term) caching is only
+ * invalidated / busted, if the asset actually changed.
+ *
+ * TODO: Re-implement in TypeScript!
+ * TODO: fix the Node-style callbacks with Promises (by using Node's
+ *       "util.promisify")
+ * TODO: Apply this in Makefile
+ */
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
