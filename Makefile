@@ -78,13 +78,14 @@ else
 	npx postcss -o $@
 endif
 
+$(INTERMEDIATE_BUILD_DIR)/asset-manifest.json: $(INTERMEDIATE_BUILD_DIR)
+	touch $@
+
 # Build the website in production mode.
 # "Production mode" means:
 #   - stylesheets are generated WITHOUT source maps
 #   - stylesheets are purged, prefixed with vendor-specific stuff, minimized
-prod:
-	GNUMAKEFLAGS=--no-print-directory \
-	$(MAKE) $(INTERMEDIATE_BUILD_DIR)
+prod: $(INTERMEDIATE_BUILD_DIR)/asset-manifest.json
 
 # Build the website in development mode.
 # "Development mode" means:

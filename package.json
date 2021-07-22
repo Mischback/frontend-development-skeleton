@@ -21,6 +21,7 @@
   },
   "scripts": {
     "build": "make dev",
+    "hashed_assets": "node --trace-warnings _util/bin/hashed_assets_manifest.js",
     "watch": "npm-watch"
   }
 }
