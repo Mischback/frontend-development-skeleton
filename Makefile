@@ -103,10 +103,10 @@ $(BUILD_DIR_JS)/bundle.js: $(BUILD_DIR_JS)/index.js node_modules
 	$(create_dir)
 ifeq ($(BUILD_MODE),$(DEVELOPMENT_FLAG))
 	echo "[DEVELOPMENT] bundling script files."
-	npx browserify $(BUILD_DIR_JS)/* -o $@ --debug
+	npx browserify $(BUILD_DIR_JS)/*.js -o $@ --debug
 else
 	echo "[PRODUCTION] bundling script files."
-	npx browserify $(BUILD_DIR_JS)/* | \
+	npx browserify $(BUILD_DIR_JS)/*.js | \
 	npx uglifyjs --compress --mangle --output $@
 endif
 
