@@ -4,6 +4,7 @@
         "target": "es6",
         "module": "commonjs",
         "moduleResolution": "node",
+        "baseUrl": "./_src/ts/",
         "allowJs": true,
         "checkJs": true,
         "removeComments": true,
