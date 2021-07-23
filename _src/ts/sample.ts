@@ -1,3 +1,1 @@
-const output: string = "Hello World";
-
-console.log(output);
+export const output: string = "Hello World";
