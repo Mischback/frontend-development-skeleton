@@ -1,3 +1,3 @@
-import { output } from "sample";
+import { output } from "./sample";
 
 alert(output);
