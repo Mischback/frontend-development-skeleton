@@ -42,6 +42,10 @@ DEVELOPMENT_FLAG = dev
 # utility function to create required directories on the fly
 create_dir = @mkdir -p $(@D)
 
+node_modules : package.json
+	npm install
+	touch $@
+
 
 # Build all required assets, including stylesheets (css/*.css), javascripts
 # (js/*.js), images/graphics (images/*.{png,jpg,webp} and fonts (fonts/*.*).
@@ -63,7 +67,7 @@ $(BUILD_DIR_CSS): $(addprefix $(BUILD_DIR_CSS)/, $(BUILD_CSS_FILES))
 # The recipe does respect the $(BUILD_MODE) and will create and store the
 # corresponding source maps, if run with $(DEVELOPMENT_FLAG). In development
 # mode no post-processing will be be performed.
-$(BUILD_DIR_CSS)/%.css : $(SOURCE_DIR_SASS)/%.scss $(SOURCE_SASS)
+$(BUILD_DIR_CSS)/%.css : $(SOURCE_DIR_SASS)/%.scss $(SOURCE_SASS) node_modules
 	$(create_dir)
 ifeq ($(BUILD_MODE),$(DEVELOPMENT_FLAG))
 	echo "[DEVELOPMENT] building stylesheet: $@ from $<"
@@ -95,7 +99,7 @@ $(BUILD_DIR_JS): $(addprefix $(BUILD_DIR_JS)/, $(BUILD_JS_FILES))
 # script files into one.
 # If you want to provide seperate script files, you will have to provide
 # dedicated rules.
-$(BUILD_DIR_JS)/bundle.js: $(BUILD_DIR_JS)/index.js
+$(BUILD_DIR_JS)/bundle.js: $(BUILD_DIR_JS)/index.js node_modules
 	$(create_dir)
 ifeq ($(BUILD_MODE),$(DEVELOPMENT_FLAG))
 	echo "[DEVELOPMENT] bundling script files."
@@ -112,7 +116,7 @@ endif
 # definition (provided in "tsconfig.production.json").
 # If you have other requirements, you will have to provide dedicated rules,
 # probably with dedicated project definitions.
-$(BUILD_DIR_JS)/index.js : $(SOURCE_TS)
+$(BUILD_DIR_JS)/index.js : $(SOURCE_TS) node_modules
 	$(create_dir)
 ifeq ($(BUILD_MODE),$(DEVELOPMENT_FLAG))
 	echo "[DEVELOPMENT] compiling script files."
@@ -146,7 +150,7 @@ dev:
 # configuration.
 # "npm-watch" is configured in "./package.json" and basically triggers
 # "make dev", rebuilding whatever is required.
-dev/watch:
+dev/watch: node_modules
 	npm run watch build
 
 # Run "tree" with prepared options, matching this repositories structure.
