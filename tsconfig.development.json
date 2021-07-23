@@ -1,0 +1,8 @@
+{
+    "extends": "./tsconfig.production.json",
+    "compilerOptions": {
+        "outDir": "./build/js/",
+        "removeComments": false,
+        "sourceMap": true,
+    }
+}
