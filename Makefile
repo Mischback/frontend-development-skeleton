@@ -102,8 +102,8 @@ ifeq ($(BUILD_MODE),$(DEVELOPMENT_FLAG))
 	npx browserify $(BUILD_DIR_JS)/* -o $@ --debug
 else
 	echo "[PRODUCTION] bundling script files."
-	npx browserify $(BUILD_DIR_JS)/* -o $@
-	npx uglifyjs $@ --compress --mangle --output $@
+	npx browserify $(BUILD_DIR_JS)/* | \
+	npx uglifyjs --compress --mangle --output $@
 endif
 
 # Create the script's main file.
