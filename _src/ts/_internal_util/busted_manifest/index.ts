@@ -1,6 +1,9 @@
 /* NodeJS modules */
 import fs = require("fs");
 import path = require("path");
+import util = require("util");
+
+const fsstat = util.promisify(fs.stat);
 
 /* project files */
 import {
@@ -51,45 +54,46 @@ function hashWalker(dir: string, extensions: string[]): Promise<string[]> {
         /* Make the file path absolute */
         file = path.resolve(dir, file);
 
-        fs.stat(file, (err, stat) => {
-          if (err)
-            return reject(
+        fsstat(file)
+          .then((stat) => {
+            if (stat.isDirectory()) {
+              /* handle sub-directories with recursive call */
+              hashWalker(file, extensions).then(
+                /* recursive call succeeded, merge the results */
+                (result) => {
+                  results = results.concat(result);
+                  if (!--pending) return resolve(results);
+                },
+                /* the recursive call failed, just pass the original error upwards */
+                (err) => reject(err)
+              );
+            } else {
+              /* handle files:
+               *   - match against the provided list of extensions
+               *   - actually hash the file's content
+               *   - rename / copy the file
+               *   - create record for the manifest file
+               */
+              filterByExtension(file, extensions)
+                .then((file) => {
+                  results.push(file);
+                })
+                .catch((err) => {
+                  if (!(err instanceof BustedManifestFilterByExtensionMismatch))
+                    return reject(err);
+                })
+                .finally(() => {
+                  if (!--pending) return resolve(results);
+                });
+            }
+          })
+          .catch(() =>
+            reject(
               new BustedManifestFileSystemError(
                 "Error while accessing file stat"
               )
-            );
-
-          if (stat && stat.isDirectory()) {
-            /* handle sub-directories with recursive call */
-            hashWalker(file, extensions).then(
-              /* recursive call succeeded, merge the results */
-              (result) => {
-                results = results.concat(result);
-                if (!--pending) return resolve(results);
-              },
-              /* the recursive call failed, just pass the original error upwards */
-              (err) => reject(err)
-            );
-          } else {
-            /* handle files:
-             *   - match against the provided list of extensions
-             *   - actually hash the file's content
-             *   - rename / copy the file
-             *   - create record for the manifest file
-             */
-            filterByExtension(file, extensions)
-              .then((file) => {
-                results.push(file);
-              })
-              .catch((err) => {
-                if (!(err instanceof BustedManifestFilterByExtensionMismatch))
-                  return reject(err);
-              })
-              .finally(() => {
-                if (!--pending) return resolve(results);
-              });
-          }
-        });
+            )
+          );
       });
     });
   });
