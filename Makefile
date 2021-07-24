@@ -183,7 +183,7 @@ lint/prettier :
 
 # Run "tree" with prepared options, matching this repositories structure.
 tree:
-	tree -a -I "node_modules|.git|.sass-cache" --dirsfirst -C
+	tree -a -I "node_modules|.git|.sass-cache|.husky|.vscode" --dirsfirst -C
 
 # Shortcut to build the project's utility scripts
 util : _util/bin/
