@@ -183,7 +183,8 @@ function hashFileContent(file: string): Promise<string> {
 function hashWalker(
   dir: string,
   extensions: string[],
-  hashLength: number
+  hashLength: number,
+  commonPathLength = -1
 ): Promise<string[]> {
   /* Recursively iterates a given directory and hashes files matching the
    * extensions list.
@@ -198,6 +199,14 @@ function hashWalker(
    */
 
   let results: any[] = [];
+
+  /* the first iteration of hashWalker will determine the common path length
+   * and pass it on.
+   * While hashWalker operates on absolute file paths, the resulting list of
+   * tuples should provide relative paths again.
+   */
+  if (commonPathLength === -1)
+    commonPathLength = path.resolve(dir).length - dir.length;
 
   return new Promise((resolve, reject) => {
     fsreaddir(dir)
@@ -217,7 +226,7 @@ function hashWalker(
             .then((stat) => {
               if (stat.isDirectory()) {
                 /* handle sub-directories with recursive call */
-                hashWalker(file, extensions, hashLength).then(
+                hashWalker(file, extensions, hashLength, commonPathLength).then(
                   /* recursive call succeeded, merge the results */
                   (result) => {
                     results = results.concat(result);
@@ -243,7 +252,10 @@ function hashWalker(
                   })
                   .then((newFilename) => {
                     // console.log(file, ":", newFilename);
-                    results.push({ file, newFilename });
+                    results.push({
+                      origin: file.substring(commonPathLength),
+                      hashed: newFilename.substring(commonPathLength),
+                    });
                   })
                   .catch((err) => {
                     if (
