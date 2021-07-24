@@ -1,3 +1,4 @@
+# TODO: find a better way for this, possibly see .stylelintignore
 .sass-cache
 node-modules
 .editorconfig
