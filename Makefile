@@ -20,13 +20,11 @@ SOURCE_DIR = _src
 # subdirectory for stylesheets (primarily sass/scss files, but may include
 # other files aswell).
 SOURCE_DIR_SASS = $(SOURCE_DIR)/sass
-SOURCE_SASS = $(SOURCE_DIR_SASS)/*.scss
+SOURCE_SASS = $(shell find $(SOURCE_DIR_SASS) -type f)
 
 # subdirectory for script files (provided in TypeScript)
 SOURCE_DIR_TS = $(SOURCE_DIR)/ts
-# TODO: find a way to exclude the project's utility script sources
-#       $(find $(SOURCE_DIR_TS) -type file --ignore util) ?!?
-SOURCE_TS = $(SOURCE_DIR_TS)/*.*
+SOURCE_TS = $(shell find $(SOURCE_DIR_TS) -path $(SOURCE_DIR_TS)/_internal_util -prune -false -o -type f)
 
 
 # INTERNALS
@@ -54,7 +52,7 @@ node_modules : package.json
 	touch $@
 
 # Compile the internal utility scripts
-_util/bin/ : $(SOURCE_DIR_TS)/_internal_util/*
+_util/bin/ : $(shell find $(SOURCE_DIR_TS)/_internal_util -type f)
 	npx tsc --project tsconfig.internal_util.json
 
 
