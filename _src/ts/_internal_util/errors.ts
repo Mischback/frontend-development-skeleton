@@ -27,3 +27,9 @@ export class BustedManifestHashWalkerError extends BustedManifestError {
     super(message);
   }
 }
+
+export class BustedManifestHashError extends BustedManifestError {
+  constructor(message: string) {
+    super(message);
+  }
+}

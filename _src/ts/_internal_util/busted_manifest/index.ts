@@ -1,4 +1,5 @@
 /* NodeJS modules */
+import crypto = require("crypto");
 import fs = require("fs");
 import path = require("path");
 import util = require("util");
@@ -10,6 +11,7 @@ const fsstat = util.promisify(fs.stat);
 import {
   BustedManifestFilterByExtensionMismatch,
   BustedManifestFileSystemError,
+  BustedManifestHashError,
 } from "../errors";
 
 function filterByExtension(
@@ -21,7 +23,7 @@ function filterByExtension(
    * @param file: string : Reference to a file, given as string
    * @param extensions: string[] : A list of file extensions, provided as
    *                               strings
-   * @rerturn Promise
+   * @return Promise
    *   - success: The file reference, given as string
    *   - fail: a specific error object
    */
@@ -39,6 +41,28 @@ function filterByExtension(
     return reject(
       new BustedManifestFilterByExtensionMismatch("Extension does not match!")
     );
+  });
+}
+
+function hashFileContent(file: string): Promise<string> {
+  /* Calculate the hash of a file's content.
+   *
+   * @param file: string : Reference to a file, given as string
+   *
+   * @return Promise
+   *   - success: The hash of the file's content
+   *   - fail: a specific error object
+   */
+
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash("md5");
+    const stream = fs.createReadStream(file);
+
+    stream.on("error", () =>
+      reject(new BustedManifestHashError("Error during hash calculation"))
+    );
+    stream.on("end", () => resolve(hash.digest("hex")));
+    stream.on("data", (chunk) => hash.update(chunk));
   });
 }
 
@@ -92,7 +116,11 @@ function hashWalker(dir: string, extensions: string[]): Promise<string[]> {
                  *   - create record for the manifest file
                  */
                 filterByExtension(file, extensions)
-                  .then((file) => {
+                  .then(hashFileContent)
+                  .then((hash) => {
+                    console.log("calculated hash for", file, ":", hash);
+                  })
+                  .then(() => {
                     results.push(file);
                   })
                   .catch((err) => {
