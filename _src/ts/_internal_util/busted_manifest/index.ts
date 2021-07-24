@@ -16,11 +16,19 @@ function filterByExtension(
   file: string,
   extensions: string[]
 ): Promise<string> {
+  /* Matches a given file against a list of extensions.
+   *
+   * @param file: string : Reference to a file, given as string
+   * @param extensions: string[] : A list of file extensions, provided as
+   *                               strings
+   * @rerturn Promise
+   *   - success: The file reference, given as string
+   *   - fail: a specific error object
+   */
+
   return new Promise((resolve, reject) => {
     /* get the file extension */
-    const fileExt = path.extname(file);
-
-    // console.log("filterByExtension", file);
+    const fileExt = path.extname(file).substring(1);
 
     /* if the file matches the extensions, resolve with the "file" for further
      * processing.
@@ -35,6 +43,18 @@ function filterByExtension(
 }
 
 function hashWalker(dir: string, extensions: string[]): Promise<string[]> {
+  /* Recursively iterates a given directory and hashes files matching the
+   * extensions list.
+   *
+   * @param dir: string : A path given as string.
+   * @param extensions: string[] : A list of file extensions, provided as
+   *                               strings
+   * @return Promise
+   *   - success: a list with tupels of filenames and generated filenames that
+   *              include a hash of the file's content
+   *   - fail: the respective error object
+   */
+
   let results: string[] = [];
 
   return new Promise((resolve, reject) => {
@@ -106,7 +126,7 @@ function hashWalker(dir: string, extensions: string[]): Promise<string[]> {
 function main(args: string[]): number {
   console.log("arguments ", args);
 
-  hashWalker("build", [".css", ".js"]).then(
+  hashWalker("build", ["css", "js"]).then(
     (result) => {
       console.log("hashWalker finished! ", result);
     },
