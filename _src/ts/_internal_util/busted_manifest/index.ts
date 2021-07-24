@@ -4,7 +4,9 @@ import fs = require("fs");
 import path = require("path");
 import util = require("util");
 
+const fscopyfile = util.promisify(fs.copyFile);
 const fsreaddir = util.promisify(fs.readdir);
+const fsrename = util.promisify(fs.rename);
 const fsstat = util.promisify(fs.stat);
 
 /* project files */
@@ -12,13 +14,106 @@ import {
   BustedManifestFilterByExtensionMismatch,
   BustedManifestFileSystemError,
   BustedManifestHashError,
+  BustedManifestHashWalkerError,
 } from "../errors";
+
+const modeCopy = "modeCopy";
+const modeRename = "modeRename";
+
+function copyFile(source: string, destination: string): Promise<string> {
+  /* Copy the source file to destination file name.
+   * In the context of this script, the source file will be copied to a new
+   * filename, as provided by determineNewFilname.
+   *
+   * @param source: string : the source file, provided as string
+   * @oaram destination: string : the destination, provided as string
+   * @return Promise
+   *   - success: the new filename, provided as string
+   *   - fail: an internal error object
+   */
+
+  return new Promise((resolve, reject) => {
+    fscopyfile(source, destination)
+      .then(() => resolve(destination))
+      .catch(() =>
+        reject(new BustedManifestFileSystemError("Could not copy file!"))
+      );
+  });
+}
+
+function renameFile(source: string, destination: string): Promise<string> {
+  /* Rename the source file to destination file name.
+   * In the context of this script, the source file will be renamed to a new
+   * filename, as provided by determineNewFilename.
+   *
+   * @param source: string : the source file, provided as string
+   * @param destination: string : the destination, provided as string
+   * @return Promise
+   *   - success: the new filename, provided as string
+   *   - fail: an internal error object
+   */
+
+  return new Promise((resolve, reject) => {
+    fsrename(source, destination)
+      .then(() => resolve(destination))
+      .catch(() =>
+        reject(new BustedManifestFileSystemError("Could not rename file!"))
+      );
+  });
+}
+
+function createHashedFile(
+  source: string,
+  destination: string,
+  mode: string
+): Promise<string> {
+  /* Create the file with the file's content hashed included in its name.
+   *
+   * This function determines, if the new file will be created by copying or
+   * renaming.
+   *
+   * @param source: string : the source file, provided as string
+   * @param destination: string : the destination, provided as string
+   * @param mode: string : determines copy or rename mode
+   * @return Promise
+   *   - success: the new filename, provided as string
+   *   - fail: an internal error object, as raised by the actual file operation
+   *           function (renameFile or copyFile)
+   */
+
+  return new Promise((resolve, reject) => {
+    let fileFunc;
+    switch (mode) {
+      case modeCopy:
+        fileFunc = copyFile;
+        break;
+      case modeRename:
+        fileFunc = renameFile;
+        break;
+      default:
+        return reject(new BustedManifestHashWalkerError("Unknown mode"));
+    }
+
+    fileFunc(source, destination)
+      .then(() => resolve(destination))
+      .catch((err) => reject(err));
+  });
+}
 
 function determineNewFilename(
   file: string,
   fileHash: string,
   hashLength: number
 ): Promise<string> {
+  /* Determines the new filename by including the file's hash.
+   *
+   * @param file: string : the file, provided as string
+   * @param fileHash: string : the hash of the file's content
+   * @param hashLength: number : just use a part of the hash
+   * @return Promise
+   *   - success: the new filename
+   */
+
   return new Promise((resolve, _reject) => {
     const filePath = path.dirname(file);
     const fileExt = path.extname(file);
@@ -144,7 +239,10 @@ function hashWalker(
                     return determineNewFilename(file, hash, hashLength);
                   })
                   .then((newFilename) => {
-                    console.log(file, ":", newFilename);
+                    return createHashedFile(file, newFilename, modeRename);
+                  })
+                  .then((newFilename) => {
+                    // console.log(file, ":", newFilename);
                     results.push({ file, newFilename });
                   })
                   .catch((err) => {
