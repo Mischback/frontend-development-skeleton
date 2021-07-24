@@ -290,7 +290,10 @@ function main(args: string[]): number {
 
   hashWalker("build", ["css", "js"], 10).then(
     (result) => {
-      console.log("hashWalker finished! ", result);
+      fs.writeFileSync(
+        path.join("build", "asset-manifest.json"),
+        JSON.stringify(result)
+      );
     },
     (err) => {
       console.log("hashWalker returned with an error:");
