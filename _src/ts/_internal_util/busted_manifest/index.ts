@@ -14,6 +14,25 @@ import {
   BustedManifestHashError,
 } from "../errors";
 
+function determineNewFilename(
+  file: string,
+  fileHash: string,
+  hashLength: number
+): Promise<string> {
+  return new Promise((resolve, _reject) => {
+    const filePath = path.dirname(file);
+    const fileExt = path.extname(file);
+    const fileBasename = path.basename(file, fileExt);
+
+    const newFilename = path.join(
+      filePath,
+      fileBasename + "." + fileHash.substring(0, hashLength) + fileExt
+    );
+
+    return resolve(newFilename);
+  });
+}
+
 function filterByExtension(
   file: string,
   extensions: string[]
@@ -66,7 +85,11 @@ function hashFileContent(file: string): Promise<string> {
   });
 }
 
-function hashWalker(dir: string, extensions: string[]): Promise<string[]> {
+function hashWalker(
+  dir: string,
+  extensions: string[],
+  hashLength: number
+): Promise<string[]> {
   /* Recursively iterates a given directory and hashes files matching the
    * extensions list.
    *
@@ -79,7 +102,7 @@ function hashWalker(dir: string, extensions: string[]): Promise<string[]> {
    *   - fail: the respective error object
    */
 
-  let results: string[] = [];
+  let results: any[] = [];
 
   return new Promise((resolve, reject) => {
     fsreaddir(dir)
@@ -99,7 +122,7 @@ function hashWalker(dir: string, extensions: string[]): Promise<string[]> {
             .then((stat) => {
               if (stat.isDirectory()) {
                 /* handle sub-directories with recursive call */
-                hashWalker(file, extensions).then(
+                hashWalker(file, extensions, hashLength).then(
                   /* recursive call succeeded, merge the results */
                   (result) => {
                     results = results.concat(result);
@@ -118,10 +141,11 @@ function hashWalker(dir: string, extensions: string[]): Promise<string[]> {
                 filterByExtension(file, extensions)
                   .then(hashFileContent)
                   .then((hash) => {
-                    console.log("calculated hash for", file, ":", hash);
+                    return determineNewFilename(file, hash, hashLength);
                   })
-                  .then(() => {
-                    results.push(file);
+                  .then((newFilename) => {
+                    console.log(file, ":", newFilename);
+                    results.push({ file, newFilename });
                   })
                   .catch((err) => {
                     if (
@@ -154,7 +178,7 @@ function hashWalker(dir: string, extensions: string[]): Promise<string[]> {
 function main(args: string[]): number {
   console.log("arguments ", args);
 
-  hashWalker("build", ["css", "js"]).then(
+  hashWalker("build", ["css", "js"], 10).then(
     (result) => {
       console.log("hashWalker finished! ", result);
     },
