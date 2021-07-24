@@ -7,6 +7,7 @@
     "npm-watch": "^0.10.0",
     "postcss": "^8.3.5",
     "postcss-cli": "^8.3.1",
+    "prettier": "^2.3.2",
     "sass": "^1.35.2",
     "typescript": "^4.3.5",
     "uglify-js": "^3.14.0"
@@ -17,7 +18,7 @@
         "_src",
         "."
       ],
-      "extensions": "html,js,scss",
+      "extensions": "html,css,scss,js,ts",
       "quiet": false,
       "silent": true
     }
