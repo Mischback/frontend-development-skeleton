@@ -12,12 +12,12 @@ module.exports = {
   plugins: [
     require("@fullhuman/postcss-purgecss")({
       content: ["./**/*.html"],
-      fontFace: true,   // default: false
-      keyframes: true,  // default: false
-      variables: true,  // default: false
-      rejected: false,  // turn "true" to actually see list of removed items
+      fontFace: true, // default: false
+      keyframes: true, // default: false
+      variables: true, // default: false
+      rejected: false, // turn "true" to actually see list of removed items
       // safelist: [],  // ALWAYS include these
-      blocklist: []     // NEVER include these
+      blocklist: [], // NEVER include these
     }),
     /* TODO: "autoprefixer" relies on "browserslist" and may be controlled
      *       using a ".browserslistrc" file for configuration.
@@ -25,6 +25,6 @@ module.exports = {
      *       *too inclusive* and can be turned down.
      */
     require("autoprefixer")(),
-    require("cssnano")()
-  ]
-}
+    require("cssnano")(),
+  ],
+};

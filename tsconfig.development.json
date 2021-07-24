@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.production.json",
+  "compilerOptions": {
+    "outDir": "./build/js/",
+    "removeComments": false,
+    "inlineSourceMap": true,
+    "inlineSources": true
+  }
+}
