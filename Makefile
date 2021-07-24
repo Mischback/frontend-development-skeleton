@@ -153,6 +153,23 @@ dev:
 dev/watch: node_modules
 	npm run watch build
 
+# The following recipes run the linters against the code base, including
+# "prettier" as code formatter, using the default configurations as provided in
+# the corresponding configuration files.
+# PLEASE NOTE, that this will not actually modify the files!
+lint : lint/prettier lint/eslint lint/stylelint
+
+lint/eslint : lint/prettier
+	echo "[LINT] running eslint..."
+	npx eslint .
+
+lint/stylelint : lint/prettier
+	echo "[LINT] running stylelint..."
+	npx stylelint .
+
+lint/prettier :
+	npx prettier -c .
+
 # Run "tree" with prepared options, matching this repositories structure.
 tree:
 	tree -a -I "node_modules|.git|.sass-cache" --dirsfirst -C
@@ -161,4 +178,4 @@ tree:
 .SILENT:
 
 # these targets don't produce actual output
-.PHONY: dev dev/watch prod tree
+.PHONY: dev dev/watch lint lint/eslint lint/prettier lint/stylelint prod tree
