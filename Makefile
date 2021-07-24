@@ -170,7 +170,7 @@ lint : lint/prettier lint/eslint lint/stylelint
 
 lint/eslint : lint/prettier
 	echo "[LINT] running eslint..."
-	npx eslint .
+	npx eslint "**/*.{js,ts}"
 
 lint/stylelint : lint/prettier
 	echo "[LINT] running stylelint..."

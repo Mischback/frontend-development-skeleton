@@ -15,3 +15,15 @@ export class BustedManifestFilterByExtensionMismatch extends BustedManifestError
     super(message);
   }
 }
+
+export class BustedManifestFileSystemError extends BustedManifestError {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+export class BustedManifestHashWalkerError extends BustedManifestError {
+  constructor(message: string) {
+    super(message);
+  }
+}
