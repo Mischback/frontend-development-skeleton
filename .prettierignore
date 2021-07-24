@@ -1,11 +1,9 @@
-# TODO: find a better way for this, possibly see .stylelintignore
+# ignore project-related directories
 .sass-cache
-node-modules
-.editorconfig
-.gitignore
-.prettierignore
-LICENSE
-Makefile
+node_modules
 
+# ignore our build directory, as it will never meet prettier's standard
 build
+
+# ignore the project's utility scripts
 _util
