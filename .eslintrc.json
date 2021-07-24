@@ -11,10 +11,23 @@
   "rules": {},
   "overrides": [
     {
-      "files": ["_src/ts/*"],
+      "files": ["_src/ts/*", "!_src/ts/_internal_util/*"],
       "parser": "@typescript-eslint/parser",
       "parserOptions": {
         "project": ["./tsconfig.production.json"]
+      },
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "prettier"
+      ]
+    },
+    {
+      "files": ["_src/ts/_internal_util/*"],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": ["./tsconfig.internal_util.json"]
       },
       "extends": [
         "eslint:recommended",

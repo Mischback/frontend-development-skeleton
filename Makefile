@@ -53,6 +53,10 @@ node_modules : package.json
 	npm install
 	touch $@
 
+# Compile the internal utility scripts
+_util/bin/ : $(SOURCE_DIR_TS)/_internal_util/*
+	npx tsc --project tsconfig.internal_util.json
+
 
 # Build all required assets, including stylesheets (css/*.css), javascripts
 # (js/*.js), images/graphics (images/*.{png,jpg,webp} and fonts (fonts/*.*).
@@ -181,8 +185,12 @@ lint/prettier :
 tree:
 	tree -a -I "node_modules|.git|.sass-cache" --dirsfirst -C
 
+# Shortcut to build the project's utility scripts
+util : _util/bin/
+
 # do not print commands to stdout
 .SILENT:
 
 # these targets don't produce actual output
-.PHONY: dev dev/watch lint lint/eslint lint/prettier lint/stylelint prod tree
+.PHONY: dev dev/watch lint lint/eslint lint/prettier lint/stylelint prod tree \
+        util

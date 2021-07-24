@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["_src/ts/_internal_util/**/*"],
+  "compilerOptions": {
+    "outDir": "./_util/bin/"
+  }
+}
