@@ -1,0 +1,6 @@
+# basicall: ignore all files, except scss sources
+*.*
+!*.scss
+
+# yeah, this has no filetype extension.
+LICENSE

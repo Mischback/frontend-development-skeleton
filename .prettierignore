@@ -1,0 +1,9 @@
+# ignore project-related directories
+.sass-cache
+node_modules
+
+# ignore our build directory, as it will never meet prettier's standard
+build
+
+# ignore the project's utility scripts
+_util

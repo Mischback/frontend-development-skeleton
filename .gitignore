@@ -1,0 +1,11 @@
+# NodeJS's module directory
+node_modules
+
+# Sass's cache directory
+.sass-cache
+
+# ignore the build directories
+build
+
+# TODO: STOP ignoring the package-lock.json when this is merged back
+package-lock.json
