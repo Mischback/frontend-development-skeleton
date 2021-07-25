@@ -300,17 +300,23 @@ function main(): void {
   /* setup of the command line options */
   const options = stdio.getopt({
     rootDirectory: {
-      key: "r",
       description: "The root directory to look for files",
       required: true,
       args: 1,
     },
-    hashLength: {
-      key: "l",
-      description: "The length of the hash string to be appended",
+    outFile: {
+      description: "Name of the output file, including its extension.",
       required: false,
       args: 1,
-      default: "10",
+      default: "asset-manifest.json",
+    },
+    extensions: {
+      key: "e",
+      description: "A file extension to be processed, without leading dot.",
+      required: false,
+      args: "*",
+      multiple: true,
+      default: ["css", "js"],
     },
     mode: {
       key: "m",
@@ -323,27 +329,32 @@ function main(): void {
       args: 1,
       default: "copy",
     },
-    extensions: {
-      key: "e",
-      description: "A file extension to be processed, without leading dot.",
+    hashLength: {
+      description: "The length of the hash string to be appended",
       required: false,
-      args: "*",
-      multiple: true,
-      default: [],
+      args: 1,
+      default: "10",
     },
   });
 
   /* parse the options */
   const config = {
     rootDirectory: "",
+    outFile: "asset-manifest.json",
     hashLength: 0,
     mode: "",
     extensions: ["css", "js"],
   };
 
   if (options !== null) {
+    /* the length of the hash is simply converted to a number */
     config.hashLength = parseInt(options.hashLength.toString());
 
+    /* Parsing the extension list
+     * If multiple extensions are provided, they will be pushed to config one
+     * by one. If only a single extension is given, it will be pushed to an
+     * array aswell, as hashWalker expects a list of extensions.
+     */
     if (Array.isArray(options.extensions)) {
       config.extensions = [];
       options.extensions.forEach((item) => {
@@ -356,6 +367,7 @@ function main(): void {
       process.exit(EXIT_CONFIG_FAILURE);
     }
 
+    /* just check, if mode is set to one of the accepted values */
     if (options.mode === modeCopy || options.mode === modeRename)
       config.mode = options.mode;
     else {
@@ -366,6 +378,9 @@ function main(): void {
       process.exit(EXIT_CONFIG_FAILURE);
     }
 
+    /* The rootDir, as the starting point of hashWalker.
+     * Just checking, if the path is actually readable/writeable.
+     */
     const checkRootDir = path.normalize(
       path.resolve(options.rootDirectory.toString())
     );
@@ -379,6 +394,26 @@ function main(): void {
       console.error("Resolved the directory to:", checkRootDir);
       process.exit(EXIT_CONFIG_FAILURE);
     }
+
+    /* The outFile has to be readable and writeable */
+    let checkOutFile = options.outFile.toString();
+    if (checkOutFile === path.basename(checkOutFile))
+      checkOutFile = path.normalize(
+        path.resolve(path.join(config.rootDirectory, checkOutFile))
+      );
+    else checkOutFile = path.normalize(path.resolve(checkOutFile));
+
+    try {
+      fs.accessSync(
+        path.dirname(checkOutFile),
+        fs.constants.R_OK | fs.constants.W_OK
+      );
+      config.outFile = checkOutFile;
+    } catch (err) {
+      console.error("The specified outFile could not be read/written to.");
+      console.error("Resolved outFile to:", checkOutFile);
+      process.exit(EXIT_CONFIG_FAILURE);
+    }
   }
 
   /* actually run the hashWalker */
@@ -390,10 +425,7 @@ function main(): void {
   ).then(
     (result) => {
       console.log("hashWalker finished...");
-      fs.writeFileSync(
-        path.join("build", "asset-manifest.json"),
-        JSON.stringify(result)
-      );
+      fs.writeFileSync(config.outFile, JSON.stringify(result));
       process.exit(EXIT_SUCCESS);
     },
     (err) => {
