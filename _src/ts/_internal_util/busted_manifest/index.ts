@@ -2,6 +2,7 @@
 import crypto = require("crypto");
 import fs = require("fs");
 import path = require("path");
+import stdio = require("stdio");
 import util = require("util");
 
 const fscopyfile = util.promisify(fs.copyFile);
@@ -285,23 +286,47 @@ function hashWalker(
   });
 }
 
-function main(args: string[]): number {
-  console.log("arguments ", args);
+function main(): void {
+  /* setup of the command line options */
+  const options = stdio.getopt({
+    rootDirectory: {
+      key: "r",
+      description: "The root directory to look for files",
+      required: true,
+      args: 1,
+    },
+    hashLength: {
+      key: "l",
+      description: "The length of the hash string to be appended",
+      required: false,
+      args: 1,
+      default: "10",
+    },
+    mode: {
+      key: "m",
+      description:
+        "The operation mode. Files can be renamed or copied. Accepted values: copy|rename",
+      required: false,
+      args: 1,
+      default: "copy",
+    },
+  });
+
+  console.log(options);
 
   hashWalker("build", ["css", "js"], 10).then(
-    (result) => {
-      fs.writeFileSync(
-        path.join("build", "asset-manifest.json"),
-        JSON.stringify(result)
-      );
+    () => {
+      console.log("finished");
+      // fs.writeFileSync(
+      //   path.join("build", "asset-manifest.json"),
+      //   JSON.stringify(result)
+      // );
     },
     (err) => {
       console.log("hashWalker returned with an error:");
       console.log(err);
     }
   );
-
-  return 0;
 }
 
-main(process.argv.slice(2));
+main();
