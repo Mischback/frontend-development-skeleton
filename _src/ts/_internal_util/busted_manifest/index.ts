@@ -18,8 +18,8 @@ import {
   BustedManifestHashWalkerError,
 } from "../errors";
 
-const modeCopy = "modeCopy";
-const modeRename = "modeRename";
+const modeCopy = "copy";
+const modeRename = "rename";
 
 function copyFile(source: string, destination: string): Promise<string> {
   /* Copy the source file to destination file name.
@@ -185,6 +185,7 @@ function hashWalker(
   dir: string,
   extensions: string[],
   hashLength: number,
+  operationMode: string,
   commonPathLength = -1
 ): Promise<string[]> {
   /* Recursively iterates a given directory and hashes files matching the
@@ -227,7 +228,13 @@ function hashWalker(
             .then((stat) => {
               if (stat.isDirectory()) {
                 /* handle sub-directories with recursive call */
-                hashWalker(file, extensions, hashLength, commonPathLength).then(
+                hashWalker(
+                  file,
+                  extensions,
+                  hashLength,
+                  operationMode,
+                  commonPathLength
+                ).then(
                   /* recursive call succeeded, merge the results */
                   (result) => {
                     results = results.concat(result);
@@ -249,7 +256,7 @@ function hashWalker(
                     return determineNewFilename(file, hash, hashLength);
                   })
                   .then((newFilename) => {
-                    return createHashedFile(file, newFilename, modeRename);
+                    return createHashedFile(file, newFilename, operationMode);
                   })
                   .then((newFilename) => {
                     // console.log(file, ":", newFilename);
@@ -305,26 +312,71 @@ function main(): void {
     mode: {
       key: "m",
       description:
-        "The operation mode. Files can be renamed or copied. Accepted values: copy|rename",
+        "The operation mode. Files can be renamed or copied. Accepted values: " +
+        modeCopy +
+        "|" +
+        modeRename,
       required: false,
       args: 1,
       default: "copy",
     },
   });
 
-  console.log(options);
+  console.log("read options", options);
 
-  hashWalker("build", ["css", "js"], 10).then(
-    () => {
-      console.log("finished");
-      // fs.writeFileSync(
-      //   path.join("build", "asset-manifest.json"),
-      //   JSON.stringify(result)
-      // );
+  /* parse the options */
+  const config = {
+    rootDirectory: "",
+    hashLength: 0,
+    mode: "",
+  };
+
+  if (options !== null) {
+    if (options.mode === modeCopy || options.mode === modeRename)
+      config.mode = options.mode;
+    else {
+      console.error("Could not determine operation mode.");
+      console.error(
+        'Make sure to use either "' + modeCopy + '" or "' + modeRename + '"'
+      );
+      process.exit(1);
+    }
+
+    config.hashLength = parseInt(options.hashLength.toString());
+
+    const checkRootDir = path.normalize(
+      path.resolve(options.rootDirectory.toString())
+    );
+    try {
+      fs.accessSync(checkRootDir, fs.constants.R_OK | fs.constants.W_OK);
+      config.rootDirectory = options.rootDirectory.toString();
+    } catch (err) {
+      console.error(
+        "The specified rootDirectory could not be read/written to."
+      );
+      console.error("Resolved the directory to:", checkRootDir);
+      process.exit(1);
+    }
+  }
+
+  hashWalker(
+    config.rootDirectory,
+    ["css", "js"],
+    config.hashLength,
+    config.mode
+  ).then(
+    (result) => {
+      console.log("hashWalker finished...");
+      fs.writeFileSync(
+        path.join("build", "asset-manifest.json"),
+        JSON.stringify(result)
+      );
+      process.exit(0);
     },
     (err) => {
       console.log("hashWalker returned with an error:");
       console.log(err);
+      process.exit(1);
     }
   );
 }
