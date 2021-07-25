@@ -20,6 +20,9 @@ import {
 
 const modeCopy = "copy";
 const modeRename = "rename";
+const EXIT_SUCCESS = 0;
+const EXIT_CONFIG_FAILURE = 3;
+const EXIT_HASHWALKER_FAILURE = 4;
 
 function copyFile(source: string, destination: string): Promise<string> {
   /* Copy the source file to destination file name.
@@ -320,18 +323,39 @@ function main(): void {
       args: 1,
       default: "copy",
     },
+    extensions: {
+      key: "e",
+      description: "A file extension to be processed, without leading dot.",
+      required: false,
+      args: "*",
+      multiple: true,
+      default: [],
+    },
   });
-
-  console.log("read options", options);
 
   /* parse the options */
   const config = {
     rootDirectory: "",
     hashLength: 0,
     mode: "",
+    extensions: ["css", "js"],
   };
 
   if (options !== null) {
+    config.hashLength = parseInt(options.hashLength.toString());
+
+    if (Array.isArray(options.extensions)) {
+      config.extensions = [];
+      options.extensions.forEach((item) => {
+        config.extensions.push(item.toString());
+      });
+    } else if (typeof options.extensions === "string") {
+      config.extensions = [options.extensions];
+    } else {
+      console.error("Could not parse extensions.");
+      process.exit(EXIT_CONFIG_FAILURE);
+    }
+
     if (options.mode === modeCopy || options.mode === modeRename)
       config.mode = options.mode;
     else {
@@ -339,10 +363,8 @@ function main(): void {
       console.error(
         'Make sure to use either "' + modeCopy + '" or "' + modeRename + '"'
       );
-      process.exit(1);
+      process.exit(EXIT_CONFIG_FAILURE);
     }
-
-    config.hashLength = parseInt(options.hashLength.toString());
 
     const checkRootDir = path.normalize(
       path.resolve(options.rootDirectory.toString())
@@ -355,13 +377,14 @@ function main(): void {
         "The specified rootDirectory could not be read/written to."
       );
       console.error("Resolved the directory to:", checkRootDir);
-      process.exit(1);
+      process.exit(EXIT_CONFIG_FAILURE);
     }
   }
 
+  /* actually run the hashWalker */
   hashWalker(
     config.rootDirectory,
-    ["css", "js"],
+    config.extensions,
     config.hashLength,
     config.mode
   ).then(
@@ -371,12 +394,12 @@ function main(): void {
         path.join("build", "asset-manifest.json"),
         JSON.stringify(result)
       );
-      process.exit(0);
+      process.exit(EXIT_SUCCESS);
     },
     (err) => {
-      console.log("hashWalker returned with an error:");
-      console.log(err);
-      process.exit(1);
+      console.error("hashWalker returned with an error:");
+      console.error(err);
+      process.exit(EXIT_HASHWALKER_FAILURE);
     }
   );
 }
