@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "@fullhuman/postcss-purgecss": "^4.0.3",
+    "@types/node": "^16.4.1",
     "@typescript-eslint/eslint-plugin": "^4.28.4",
     "@typescript-eslint/parser": "^4.28.4",
     "autoprefixer": "^10.3.1",
@@ -15,6 +16,7 @@
     "postcss-cli": "^8.3.1",
     "prettier": "^2.3.2",
     "sass": "^1.35.2",
+    "stdio": "^2.1.1",
     "stylelint": "^13.13.1",
     "stylelint-config-prettier": "^8.0.2",
     "stylelint-config-property-sort-order-smacss": "^7.1.0",

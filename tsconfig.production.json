@@ -1,5 +1,7 @@
 {
   "extends": "./tsconfig.json",
+  "include": ["_src/ts/**/*"],
+  "exclude": ["_src/ts/_internal_util/**/*"],
   "compilerOptions": {
     "outDir": "./build/js/"
   }

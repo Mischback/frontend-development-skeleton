@@ -20,13 +20,11 @@ SOURCE_DIR = _src
 # subdirectory for stylesheets (primarily sass/scss files, but may include
 # other files aswell).
 SOURCE_DIR_SASS = $(SOURCE_DIR)/sass
-SOURCE_SASS = $(SOURCE_DIR_SASS)/*.scss
+SOURCE_SASS = $(shell find $(SOURCE_DIR_SASS) -type f)
 
 # subdirectory for script files (provided in TypeScript)
 SOURCE_DIR_TS = $(SOURCE_DIR)/ts
-# TODO: find a way to exclude the project's utility script sources
-#       $(find $(SOURCE_DIR_TS) -type file --ignore util) ?!?
-SOURCE_TS = $(SOURCE_DIR_TS)/*.*
+SOURCE_TS = $(shell find $(SOURCE_DIR_TS) -path $(SOURCE_DIR_TS)/_internal_util -prune -false -o -type f)
 
 
 # INTERNALS
@@ -52,6 +50,10 @@ create_dir = @mkdir -p $(@D)
 node_modules : package.json
 	npm install
 	touch $@
+
+# Compile the internal utility scripts
+_util/bin/ : $(shell find $(SOURCE_DIR_TS)/_internal_util -type f)
+	npx tsc --project tsconfig.internal_util.json
 
 
 # Build all required assets, including stylesheets (css/*.css), javascripts
@@ -168,7 +170,7 @@ lint : lint/prettier lint/eslint lint/stylelint
 
 lint/eslint : lint/prettier
 	echo "[LINT] running eslint..."
-	npx eslint .
+	npx eslint "**/*.{js,ts}"
 
 lint/stylelint : lint/prettier
 	echo "[LINT] running stylelint..."
@@ -179,10 +181,14 @@ lint/prettier :
 
 # Run "tree" with prepared options, matching this repositories structure.
 tree:
-	tree -a -I "node_modules|.git|.sass-cache" --dirsfirst -C
+	tree -a -I "node_modules|.git|.sass-cache|.husky|.vscode" --dirsfirst -C
+
+# Shortcut to build the project's utility scripts
+util : _util/bin/
 
 # do not print commands to stdout
 .SILENT:
 
 # these targets don't produce actual output
-.PHONY: dev dev/watch lint lint/eslint lint/prettier lint/stylelint prod tree
+.PHONY: dev dev/watch lint lint/eslint lint/prettier lint/stylelint prod tree \
+        util

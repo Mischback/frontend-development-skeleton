@@ -5,7 +5,8 @@ node_modules
 .sass-cache
 
 # ignore the build directories
-build
+build/
+_util/
 
 # TODO: STOP ignoring the package-lock.json when this is merged back
 package-lock.json
