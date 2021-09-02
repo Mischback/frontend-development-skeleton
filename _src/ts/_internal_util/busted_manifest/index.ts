@@ -300,11 +300,22 @@ function hashWalker(
 }
 
 function mergeIncrementalResults(
+  /* Merge results in incremental operation mode.
+   *
+   * @param existing_result: resultDict : The existing results as parsed from
+   *                                      the JSON file
+   * @param new_result: resultDict : The results of this run
+   *
+   * @return resultDict : the merged dictionary
+   */
   existing_result: resultDict,
   new_result: resultDict
-) {
-  console.log(existing_result);
-  console.log(new_result);
+): resultDict {
+  for (const key in new_result) {
+    existing_result[key] = new_result[key];
+  }
+
+  return existing_result;
 }
 
 function main(): void {
@@ -450,6 +461,7 @@ function main(): void {
   ).then(
     (result) => {
       console.log("hashWalker finished...");
+      let final_result: resultDict = result;
       if (config.incremental) {
         const buffer = fs.readFileSync(config.outFile, "utf-8");
 
@@ -459,9 +471,9 @@ function main(): void {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const existing_result = JSON.parse(buffer.toString());
 
-        mergeIncrementalResults(existing_result, result);
+        final_result = mergeIncrementalResults(existing_result, result);
       }
-      fs.writeFileSync(config.outFile, JSON.stringify(result));
+      fs.writeFileSync(config.outFile, JSON.stringify(final_result));
       process.exit(EXIT_SUCCESS);
     },
     (err) => {
