@@ -5,6 +5,7 @@ import path = require("path");
 import stdio = require("stdio");
 import util = require("util");
 
+// TODO: Check "require("fs").promises, could possibly shorten the code here!
 const fscopyfile = util.promisify(fs.copyFile);
 const fsreaddir = util.promisify(fs.readdir);
 const fsrename = util.promisify(fs.rename);
@@ -23,6 +24,10 @@ const modeRename = "rename";
 const EXIT_SUCCESS = 0;
 const EXIT_CONFIG_FAILURE = 3;
 const EXIT_HASHWALKER_FAILURE = 4;
+
+interface resultDict {
+  [index: string]: string;
+}
 
 function copyFile(source: string, destination: string): Promise<string> {
   /* Copy the source file to destination file name.
@@ -190,7 +195,7 @@ function hashWalker(
   hashLength: number,
   operationMode: string,
   commonPathLength = -1
-): Promise<string[]> {
+): Promise<resultDict> {
   /* Recursively iterates a given directory and hashes files matching the
    * extensions list.
    *
@@ -203,7 +208,7 @@ function hashWalker(
    *   - fail: the respective error object
    */
 
-  let results: any[] = [];
+  let results: resultDict = {};
 
   /* the first iteration of hashWalker will determine the common path length
    * and pass it on.
@@ -240,7 +245,7 @@ function hashWalker(
                 ).then(
                   /* recursive call succeeded, merge the results */
                   (result) => {
-                    results = results.concat(result);
+                    results = Object.assign({}, results, result);
                     if (!--pending) return resolve(results);
                   },
                   /* the recursive call failed, just pass the original error upwards */
@@ -263,10 +268,8 @@ function hashWalker(
                   })
                   .then((newFilename) => {
                     // console.log(file, ":", newFilename);
-                    results.push({
-                      origin: file.substring(commonPathLength),
-                      hashed: newFilename.substring(commonPathLength),
-                    });
+                    results[file.substring(commonPathLength)] =
+                      newFilename.substring(commonPathLength);
                   })
                   .catch((err) => {
                     if (
@@ -294,6 +297,14 @@ function hashWalker(
         )
       );
   });
+}
+
+function mergeIncrementalResults(
+  existing_result: resultDict,
+  new_result: resultDict
+) {
+  console.log(existing_result);
+  console.log(new_result);
 }
 
 function main(): void {
@@ -329,6 +340,12 @@ function main(): void {
       args: 1,
       default: "copy",
     },
+    incremental: {
+      key: "i",
+      description: "Incrementally builds the manifest file.",
+      required: false,
+      default: false,
+    },
     hashLength: {
       description: "The length of the hash string to be appended",
       required: false,
@@ -343,12 +360,20 @@ function main(): void {
     outFile: "asset-manifest.json",
     hashLength: 0,
     mode: "",
+    incremental: false,
     extensions: ["css", "js"],
   };
 
   if (options !== null) {
     /* the length of the hash is simply converted to a number */
     config.hashLength = parseInt(options.hashLength.toString());
+
+    /* is incremental mode activated? */
+    if (typeof options.incremental === "boolean") {
+      config.incremental = options.incremental;
+    } else {
+      config.incremental = false;
+    }
 
     /* Parsing the extension list
      * If multiple extensions are provided, they will be pushed to config one
@@ -425,6 +450,17 @@ function main(): void {
   ).then(
     (result) => {
       console.log("hashWalker finished...");
+      if (config.incremental) {
+        const buffer = fs.readFileSync(config.outFile, "utf-8");
+
+        // Disable linting for the next line. The linter knows, that
+        // "existing_result" has to be a "resultDict", but JSON.parse() returns
+        // "any".
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const existing_result = JSON.parse(buffer.toString());
+
+        mergeIncrementalResults(existing_result, result);
+      }
       fs.writeFileSync(config.outFile, JSON.stringify(result));
       process.exit(EXIT_SUCCESS);
     },
